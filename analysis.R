@@ -35,18 +35,28 @@ df_rates <- dh_getQuery(db_con, "anl_query.sql") |>
   mean_diff_rank_calc(100)
 
 
+# LOOK OUT ----------------------------------------------------------------
+
+df_look <- df_rates |> 
+  filter(date == max(date), if_any(contains("rank"), \(x) x <= 5)) |> 
+  select(base_cur, conversion_cur, rate, starts_with("perc"))
+
+df_look |> 
+  filter(base_cur == "NZD") |> 
+  view(">")
+  
 
 # Plot --------------------------------------------------------------------
 
 bs_c <- "NZD"
-cv_c <- "MMK"
+cv_c <- "USD"
 
 plt_df <- filter(df_rates, base_cur == bs_c, conversion_cur == cv_c)
 
-plot_ly(plt_df, x = ~date, y = ~rate, name = 'daily', type = 'scatter', mode = 'lines+markers') |> 
-  add_trace(y = ~rate_mean_7, name = '7 day ma', mode = 'lines') |> 
-  add_trace(y = ~rate_mean_30, name = '30 day ma', mode = 'lines') |> 
-  add_trace(y = ~rate_mean_100, name = '100 day ma', mode = 'lines') |> 
+plot_ly(plt_df, x = ~date, y = ~rate, name = "daily", type = "scatter", mode = "lines+markers") |> 
+  add_trace(y = ~rate_mean_7, name = "7 day ma", mode = "lines") |> 
+  add_trace(y = ~rate_mean_30, name = "30 day ma", mode = "lines") |> 
+  add_trace(y = ~rate_mean_100, name = "100 day ma", mode = "lines") |> 
   layout(
     title = list(text = paste(bs_c, cv_c, sep = "/"), x = 0.08, y = 1.1),
     yaxis = list(title = "Rate"),
@@ -54,4 +64,16 @@ plot_ly(plt_df, x = ~date, y = ~rate, name = 'daily', type = 'scatter', mode = '
     hovermode="x unified"
   )
 
+
+# Macro stuff
+# country inflation
+# country interest
+# country debt
+# country unemployment
+# country trade balance
+# country treasury bonds
+
+# Political
+# country election date
+# news
 
