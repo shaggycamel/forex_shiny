@@ -15,13 +15,14 @@ page_rates_overview <- layout_sidebar(
     selectInput(
       "base_cur", 
       "Base Currency", 
-      choices = c("AUD", "NZD", "USD")
+      choices = c("NZD", "AUD", "USD")
     ),
-    # selectInput("conv_cur", "Conversion Currency", choices = char(0))
+    selectInput("conv_cur", "Conversion Currency", choices = character(0)),
+    card(full_screen = TRUE, DTOutput("rates_look")),
+    padding = 9
   ),
-  card(full_screen = TRUE, DTOutput("rates_look")),
   card(full_screen = TRUE, plotlyOutput("rate_trend")),
-  fillable = TRUE
+  fillable = TRUE,
 )
 
 
