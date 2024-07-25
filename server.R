@@ -7,43 +7,27 @@ library(plotly)
 library(slider)
 library(DT)
 library(nba.dataRub)
+library(here)
 # library(shinycssloaders)
 
 
 # Server code -------------------------------------------------------------
 
 server <- function(input, output, session) {
+
   
 # Variables ---------------------------------------------------------------
-
-  db_con <- dh_createCon("cockroach") 
   
+  db_con <<- if(Sys.info()["user"] == "fred") dh_createCon("postgres") else dh_createCon("cockroach") 
+  
+
 # Load datasets -----------------------------------------------------------
 
-  mean_diff_rank_calc <- function(df, interval){
-    df |> 
-      mutate(
-        !!paste0("rate_mean_", interval) := slide_mean(rate, before = interval, complete = TRUE),
-        !!paste0("rate_lag_", interval) := lag(rate, interval),
-        .by = c(base_cur, conversion_cur)
-      ) |> 
-      mutate(
-        !!paste0("perc_rate_diff_", interval) :=
-          (rate - !!sym(paste0("rate_lag_", interval))) /
-            ((rate + !!sym(paste0("rate_lag_", interval))) / 2)
-      ) |> 
-      mutate(
-        !!paste0("perc_diff_rank_", interval) := dense_rank(!!sym(paste0("perc_rate_diff_", interval)) * -1),
-        .by = c(base_cur, date)
-      )
-  }
+  if(Sys.info()["user"] == "shiny") load(".RData") else source(here("data", "base_frames.R"))
   
-  df_rates <- dh_getQuery(db_con, "anl_query.sql") |> 
-    mean_diff_rank_calc(1) |> 
-    mean_diff_rank_calc(7) |> 
-    mean_diff_rank_calc(30) |> 
-    mean_diff_rank_calc(100)
-  
+
+# Reactivity --------------------------------------------------------------
+
   df_look <- reactive({
     df_rates |>
       filter(base_cur == input$base_cur) |>
@@ -61,8 +45,6 @@ server <- function(input, output, session) {
       selected = (df_look())$conversion_cur[1]
     ) 
   }), input$base_cur)
-
-
 
   
 # Rates Overview -------------------------------------------------
