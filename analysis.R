@@ -4,8 +4,7 @@ library(slider)
 library(plotly)
 library(nba.dataRub)
 
-db_con <- dh_createCon("cockroach")
-
+db_con <- dh_createCon("postgres")
 
 # Data prep ---------------------------------------------------------------
 

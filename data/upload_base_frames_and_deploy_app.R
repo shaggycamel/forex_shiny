@@ -31,14 +31,13 @@ rsconnect::deployApp(
   appFiles = c(
     ".RData",
     ".Rprofile",
-    "data", 
     "renv.lock", 
     "server.R", 
     "ui.R"
   ),
-  # appName = "Forex",
-  # appTitle = "Forex",
-  # appId = 10565372,
+  appName = "Forex",
+  appTitle = "Forex",
+  appId = 12362129,
   account = "shaggycamel",
   server = "shinyapps.io",
   launch.browser = FALSE,

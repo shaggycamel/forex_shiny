@@ -4,7 +4,6 @@
 
 library(tidyverse)
 library(plotly)
-library(slider)
 library(DT)
 library(nba.dataRub)
 library(here)
@@ -18,14 +17,12 @@ server <- function(input, output, session) {
   
 # Variables ---------------------------------------------------------------
   
-  db_con <<- if(Sys.info()["user"] == "fred") dh_createCon("postgres") else dh_createCon("cockroach") 
+  db_con <<- dh_createCon("cockroach") 
   
-
 # Load datasets -----------------------------------------------------------
 
   if(Sys.info()["user"] == "shiny") load(".RData") else source(here("data", "base_frames.R"))
   
-
 # Reactivity --------------------------------------------------------------
 
   df_look <- reactive({

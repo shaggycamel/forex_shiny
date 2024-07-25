@@ -3,23 +3,23 @@
 
 mean_diff_rank_calc <- function(df, interval){
   df |> 
-    mutate(
-      !!paste0("rate_mean_", interval) := slide_mean(rate, before = interval, complete = TRUE),
-      !!paste0("rate_lag_", interval) := lag(rate, interval),
+    dplyr::mutate(
+      !!paste0("rate_mean_", interval) := slider::slide_mean(rate, before = interval, complete = TRUE),
+      !!paste0("rate_lag_", interval) := dplyr::lag(rate, interval),
       .by = c(base_cur, conversion_cur)
     ) |> 
-    mutate(
+    dplyr::mutate(
       !!paste0("perc_rate_diff_", interval) :=
-        (rate - !!sym(paste0("rate_lag_", interval))) /
-          ((rate + !!sym(paste0("rate_lag_", interval))) / 2)
+        (rate - !!rlang::sym(paste0("rate_lag_", interval))) /
+          ((rate + !!rlang::sym(paste0("rate_lag_", interval))) / 2)
     ) |> 
-    mutate(
-      !!paste0("perc_diff_rank_", interval) := dense_rank(!!sym(paste0("perc_rate_diff_", interval)) * -1),
+    dplyr::mutate(
+      !!paste0("perc_diff_rank_", interval) := dplyr::dense_rank(!!rlang::sym(paste0("perc_rate_diff_", interval)) * -1),
       .by = c(base_cur, date)
     )
 }
 
-df_rates <<- dh_getQuery(db_con, "anl_query.sql") |> 
+df_rates <<- nba.dataRub::dh_getQuery(db_con, "anl_query.sql") |> 
   mean_diff_rank_calc(1) |> 
   mean_diff_rank_calc(7) |> 
   mean_diff_rank_calc(30) |> 
