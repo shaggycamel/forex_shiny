@@ -3,7 +3,6 @@
 
 library(shinyWidgets)
 library(bslib)
-library(readr)
 library(DT)
 library(plotly)
 

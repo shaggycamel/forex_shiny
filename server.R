@@ -2,12 +2,11 @@
 
 # Libraries ---------------------------------------------------------------
 
-library(tidyverse)
+library(dplyr)
 library(plotly)
 library(DT)
 library(nba.dataRub)
 library(here)
-# library(shinycssloaders)
 
 
 # Server code -------------------------------------------------------------
