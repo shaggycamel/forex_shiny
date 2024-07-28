@@ -26,9 +26,13 @@ server <- function(input, output, session) {
 
   df_look <- reactive({
     df_rates |>
-      filter(base_cur == input$base_cur) |>
-      filter(date == max(date), if_any(contains("rank"), \(x) x <= 5)) |>
-      # select(conversion_cur, starts_with("perc_diff_rank")) |>
+      filter(
+        base_cur == input$base_cur,
+        # base_cur == "NZD",
+        date == max(date),
+        # rate > rate_lag_7,
+        if_any(contains("rank"), \(x) x <= 5)
+      ) |>
       arrange(perc_diff_rank_1) |> 
       select(conversion_cur)
   })
@@ -47,7 +51,9 @@ server <- function(input, output, session) {
 
   output$rates_look <- renderDT({
     
-    # remove headers and make cell tooltips which show rank, rate, perc diff
+    # make cell tooltips which show rank, rate, perc diff
+    # add widget to filter on rate > rate_lag7/30/100
+    # add clickable filtering
     datatable(
       df_look(),
       rownames = FALSE,
@@ -57,9 +63,9 @@ server <- function(input, output, session) {
         dom = "t",
         paging = FALSE,
         ordering = FALSE,
-        initComplete = JS(
-          "function(settings, json) {",
-            "$(this.api().table().header()).css({'background-color': 'blue', 'color': 'white'});",
+        headerCallback = JS(
+          "function(thead, data, start, end, display){",
+          "  $('th', thead).css('display', 'none');",
           "}"
         )
       )
@@ -73,10 +79,12 @@ server <- function(input, output, session) {
       add_trace(y = ~rate_mean_7, name = "7 day ma", mode = "lines") |> 
       add_trace(y = ~rate_mean_30, name = "30 day ma", mode = "lines") |> 
       add_trace(y = ~rate_mean_100, name = "100 day ma", mode = "lines") |> 
+      config(displayModeBar = FALSE) |> 
       layout(
         title = list(text = paste(input$base_cur, input$conv_cur, sep = "/"), x = 0.08, y = 1.1),
         yaxis = list(title = "Rate"),
         xaxis = list(title = NA, rangeslider = list(type = "date")),
+        legend = list(orientation="h", yanchor = "bottom", y = 1.05, xanchor = "right", x = 1),
         hovermode="x unified"
       )
 
