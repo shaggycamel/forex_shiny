@@ -25,16 +25,20 @@ server <- function(input, output, session) {
 # Reactivity --------------------------------------------------------------
 
   df_look <- reactive({
-    df_rates |>
+
+    df_rt <- df_rates
+    if(input$conv_cur_rate_lag_gt != "")
+      df_rt <- filter(df_rt, rate > !!sym(input$conv_cur_rate_lag_gt))
+    
+    df_rt |>
       filter(
         base_cur == input$base_cur,
-        # base_cur == "NZD",
         date == max(date),
-        # rate > rate_lag_7,
         if_any(contains("rank"), \(x) x <= 5)
       ) |>
       arrange(perc_diff_rank_1) |> 
       select(conversion_cur)
+    
   })
  
   bindEvent(observe({
