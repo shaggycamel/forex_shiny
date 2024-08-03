@@ -8,6 +8,8 @@ library(DT)
 library(nba.dataRub)
 library(here)
 
+library(magrittr)
+
 
 # Server code -------------------------------------------------------------
 
@@ -25,10 +27,13 @@ server <- function(input, output, session) {
 # Reactivity --------------------------------------------------------------
 
   df_look <- reactive({
+    
+    rt_rank <- paste0("perc_diff_rank_", input$conv_cur_lag_rate)
+    rt_perc_diff <- paste0("perc_rate_diff_", input$conv_cur_lag_rate)
 
     df_rt <- df_rates
-    if(input$conv_cur_rate_lag_gt != "")
-      df_rt <- filter(df_rt, rate > !!sym(input$conv_cur_rate_lag_gt))
+    if(input$only_increasing)
+      df_rt <- filter(df_rt, !!sym(rt_perc_diff) > 0)
     
     df_rt |>
       filter(
@@ -36,8 +41,8 @@ server <- function(input, output, session) {
         date == max(date),
         if_any(contains("rank"), \(x) x <= 5)
       ) |>
-      arrange(perc_diff_rank_1) |> 
-      select(conversion_cur)
+      arrange(desc(abs(!!sym(rt_perc_diff)))) |>
+      select(conversion_cur, !!sym(rt_perc_diff))
     
   })
  
@@ -48,21 +53,29 @@ server <- function(input, output, session) {
       choices = unique(df_rates$conversion_cur),
       selected = (df_look())$conversion_cur[1]
     ) 
-  }), input$base_cur)
-
+  }), input$base_cur, input$only_increasing, input$conv_cur_lag_rate)
   
+  bindEvent(observe({
+    updateSelectInput(
+      session,
+      "conv_cur",
+      choices = unique(df_rates$conversion_cur),
+      selected = (df_look())$conversion_cur[input$rates_look_rows_selected]
+    ) 
+  }), input$rates_look_rows_selected)
+
 # Rates Overview -------------------------------------------------
 
   output$rates_look <- renderDT({
     
     # make cell tooltips which show rank, rate, perc diff
-    # add widget to filter on rate > rate_lag7/30/100
     # add clickable filtering
     datatable(
       df_look(),
       rownames = FALSE,
       escape = FALSE,
       style = "default",
+      selection = "single",
       options = lst(
         dom = "t",
         paging = FALSE,
@@ -73,10 +86,14 @@ server <- function(input, output, session) {
           "}"
         )
       )
-    )
+    ) |> 
+      formatPercentage(columns = 2, digits = 1)
   })
   
   output$rate_trend <- renderPlotly({
+    
+    vline <- max(df_rates$date) - as.integer(input$conv_cur_lag_rate)
+    
     # Add border to plot
     filter(df_rates, base_cur == input$base_cur, conversion_cur == input$conv_cur) |> 
       plot_ly(x = ~date, y = ~rate, name = "daily", type = "scatter", mode = "lines+markers") |> 
@@ -89,9 +106,15 @@ server <- function(input, output, session) {
         yaxis = list(title = "Rate"),
         xaxis = list(title = NA, rangeslider = list(type = "date")),
         legend = list(orientation="h", yanchor = "bottom", y = 1.05, xanchor = "right", x = 1),
-        hovermode="x unified"
+        hovermode="x unified",
+        shapes = list(
+          type = "line", 
+          y0 = 0, y1 = 1, 
+          yref = "paper", 
+          x0 = vline, x1 = vline,
+          line = list(color = "grey", width = 1, dash = "dash")
+        )
       )
-
   })
 
 # Rates Observe ------------------------------------------------------

@@ -14,16 +14,17 @@ page_rates_overview <- layout_sidebar(
   sidebar = sidebar(
     selectInput(
       "base_cur", 
-      "Base Currency", 
+      "Base / Conversion", 
       choices = c("NZD", "AUD", "USD")
     ),
-    selectInput("conv_cur", "Conversion Currency", choices = character(0)),
-    radioGroupButtons(
-      "conv_cur_rate_lag_gt", 
-      label = "Lag Direction", 
-      choices = list("*" = NA, ">7" = "rate_lag_7", ">30" = "rate_lag_30", ">100" = "rate_lag_100"),
-      selected = "rate_lag_7",
-      status = "primary"
+    selectInput("conv_cur", NULL, choices = character(0)),
+    checkboxInput("only_increasing", label = "Increasing Rates Only", value = TRUE),
+    radioButtons(
+      "conv_cur_lag_rate", 
+      label = NULL, 
+      choices = list(">1" = "1", ">7" = "7", ">30" = "30", ">100" = "100"),
+      selected = "7",
+      inline = TRUE
     ),
     card(full_screen = TRUE, DTOutput("rates_look")),
     padding = 9
