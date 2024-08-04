@@ -7,14 +7,13 @@ library(plotly)
 library(DT)
 library(nba.dataRub)
 library(here)
-
+library(purrr)
 library(magrittr)
 
 
 # Server code -------------------------------------------------------------
 
 server <- function(input, output, session) {
-
   
 # Variables ---------------------------------------------------------------
   
@@ -24,11 +23,21 @@ server <- function(input, output, session) {
 
   if(Sys.info()["user"] == "shiny") load(".RData") else source(here("data", "base_frames.R"))
   
+  observed_currencies <- c("NZD", "AUD", "USD")
+  ls_nm_to_sym <- distinct(df_rates, country, conversion_cur) %$% map(setNames(conversion_cur, country), \(x) as.vector(x))
+
+  
 # Reactivity --------------------------------------------------------------
 
+  updateSelectInput(
+    session,
+    "base_cur",
+    choices = keep(ls_nm_to_sym, \(x) x %in% observed_currencies),
+    selected = observed_currencies[1]
+  ) 
+  
   df_look <- reactive({
     
-    rt_rank <- paste0("perc_diff_rank_", input$conv_cur_lag_rate)
     rt_perc_diff <- paste0("perc_rate_diff_", input$conv_cur_lag_rate)
 
     df_rt <- df_rates
@@ -42,7 +51,7 @@ server <- function(input, output, session) {
         if_any(contains("rank"), \(x) x <= 5)
       ) |>
       arrange(desc(abs(!!sym(rt_perc_diff)))) |>
-      select(conversion_cur, !!sym(rt_perc_diff))
+      select(country, !!sym(rt_perc_diff))
     
   })
  
@@ -50,8 +59,8 @@ server <- function(input, output, session) {
     updateSelectInput(
       session,
       "conv_cur",
-      choices = unique(df_rates$conversion_cur),
-      selected = (df_look())$conversion_cur[1]
+      choices = ls_nm_to_sym,
+      selected = ls_nm_to_sym[(df_look())$country[1]]
     ) 
   }), input$base_cur, input$only_increasing, input$conv_cur_lag_rate)
   
@@ -59,8 +68,8 @@ server <- function(input, output, session) {
     updateSelectInput(
       session,
       "conv_cur",
-      choices = unique(df_rates$conversion_cur),
-      selected = (df_look())$conversion_cur[input$rates_look_rows_selected]
+      choices = ls_nm_to_sym,
+      selected = ls_nm_to_sym[(df_look())$country[input$rates_look_rows_selected]]
     ) 
   }), input$rates_look_rows_selected)
 

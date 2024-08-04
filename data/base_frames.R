@@ -1,4 +1,9 @@
 
+# Symbols -----------------------------------------------------------------
+
+df_symbols <- nba.dataRub::dh_getQuery(db_con, "SELECT * FROM forex.country_symbol")
+
+
 # Rates -------------------------------------------------------------------
 
 mean_diff_rank_calc <- function(df, interval){
@@ -19,8 +24,11 @@ mean_diff_rank_calc <- function(df, interval){
     )
 }
 
+observed_currencies <- "'NZD', 'AUD', 'USD'"
 df_rates <<- nba.dataRub::dh_getQuery(db_con, "anl_query.sql") |> 
   mean_diff_rank_calc(1) |> 
   mean_diff_rank_calc(7) |> 
   mean_diff_rank_calc(30) |> 
-  mean_diff_rank_calc(100)
+  mean_diff_rank_calc(100) |> 
+  dplyr::left_join(df_symbols, by = dplyr::join_by(conversion_cur == symbol))
+

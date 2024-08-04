@@ -20,7 +20,7 @@ source(here::here("data", "base_frames.R"))
 # Save datasets -----------------------------------------------------------
 
 cat("Saving image...\n")
-rm(list = c("db_con", "mean_diff_rank_calc"))
+rm(list = c("db_con", "mean_diff_rank_calc", "df_symbols", "observed_currencies"))
 save.image()
 
 

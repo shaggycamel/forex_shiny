@@ -15,7 +15,7 @@ page_rates_overview <- layout_sidebar(
     selectInput(
       "base_cur", 
       "Base / Conversion", 
-      choices = c("NZD", "AUD", "USD")
+      choices = character(0)
     ),
     selectInput("conv_cur", NULL, choices = character(0)),
     checkboxInput("only_increasing", label = "Increasing Rates Only", value = TRUE),
@@ -27,6 +27,7 @@ page_rates_overview <- layout_sidebar(
       inline = TRUE
     ),
     card(full_screen = TRUE, DTOutput("rates_look")),
+    width = 290,
     padding = 9
   ),
   card(full_screen = TRUE, plotlyOutput("rate_trend")),
